@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1771832019646,
+      "tag": "0000_soft_loa",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1771832538525,
+      "tag": "0001_slim_vin_gonzales",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773259804519,
+      "tag": "0002_loving_the_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1773415819688,
+      "tag": "0003_unknown_iron_lad",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1773513180180,
+      "tag": "0004_nebulous_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1774271548148,
+      "tag": "0005_stormy_vance_astro",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774348800000,
+      "tag": "0006_calm_butterfly",
+      "breakpoints": true
+    }
+  ]
+}
