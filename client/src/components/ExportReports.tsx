@@ -207,6 +207,7 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
   const budgetsQ    = trpc.export.budgetsToJSON.useQuery(undefined, { enabled: false });
   const usersQ      = trpc.export.usersToJSON.useQuery(undefined, { enabled: false });
   const logsQ       = trpc.export.logsToJSON.useQuery(undefined, { enabled: false });
+  const suppliessQ  = trpc.supplies.list.useQuery(undefined, { enabled: !!medicineId });
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -225,8 +226,16 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
       let data: any[] = result.data?.data ?? [];
 
       // Filter by medicine if medicineId is provided (pharmacy-specific reports)
-      if (medicineId && reportType === "inventory") {
-        data = data.filter((item: any) => item.id === medicineId);
+      let medicineName = "";
+      if (medicineId) {
+        const medicine = suppliessQ.data?.find((m: any) => m.id === medicineId);
+        medicineName = medicine ? `${medicine.name} (${medicine.code})` : "";
+
+        if (reportType === "inventory") {
+          data = data.filter((item: any) => item.id === medicineId);
+        } else if (reportType === "orders") {
+          data = data.filter((item: any) => item.medicineId === medicineId);
+        }
       }
 
       if (!data || data.length === 0) {
@@ -235,18 +244,18 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
       }
 
       const dateStr = new Date().toISOString().split("T")[0];
-      const medicineName = medicineId ? `- Medicine #${medicineId}` : "";
+      const medicineLabel = medicineName ? ` - ${medicineName}` : "";
       const filename = `${reportType}-report-${dateStr}${medicineId ? `-med${medicineId}` : ""}`;
       const effectivePeriod = period || "monthly";
 
       if (exportFormat === "csv") {
-        const csv = buildCSVWithHeader(reportType, data, effectivePeriod, customFrom, customTo, medicineName);
+        const csv = buildCSVWithHeader(reportType, data, effectivePeriod, customFrom, customTo, medicineLabel);
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         downloadBlob(blob, `${filename}.csv`);
         toast.success(`${REPORT_LABELS[reportType]} exported as CSV`);
       } else {
         // Open printable HTML in new tab — browser's native print-to-PDF
-        const html = buildPrintableHTML(reportType, data, effectivePeriod, customFrom, customTo, medicineName);
+        const html = buildPrintableHTML(reportType, data, effectivePeriod, customFrom, customTo, medicineLabel);
         const win = window.open("", "_blank");
         if (win) {
           win.document.write(html);
@@ -329,9 +338,14 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
             <span className="font-semibold text-primary">{SYSTEM_NAME}</span>
           </div>
           <div className="text-muted-foreground">{REPORT_LABELS[reportType]}</div>
+          {medicineId && suppliessQ.data && (
+            <div className="text-muted-foreground font-medium text-primary">
+              Medicine: {suppliessQ.data.find((m: any) => m.id === medicineId)?.name || "Loading..."}
+            </div>
+          )}
           <div className="text-muted-foreground">
             Period: {period === "custom" ? `${customFrom || "—"} to ${customTo || "—"}` :
-              { monthly: "Monthly", quarterly: "Quarterly", yearly: "Annual" }[period] ?? period}
+              { monthly: "Monthly", quarterly: "Quarterly", yearly: "Annual", daily: "Daily" }[period] ?? period}
           </div>
           <div className="text-muted-foreground">Generated: {new Date().toLocaleDateString("en-RW")}</div>
         </div>
