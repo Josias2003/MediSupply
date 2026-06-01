@@ -45,14 +45,6 @@ const QA_ITEMS = [
   },
 ];
 
-const DEMO_ACCOUNTS = [
-  { role: "Admin", email: "sindnepom@gmail.com" },
-  { role: "Pharmacist", email: "blackhathackers2022@gmail.com" },
-  { role: "Procurement", email: "bikomeye9@gmail.com" },
-  { role: "Supplier", email: "nayihikisamuelnasri@gmail.com" },
-  { role: "Accountant", email: "vianew440@gmail.com" },
-];
-
 export default function LoginPage() {
   const utils = trpc.useUtils();
   const { theme, toggleTheme } = useTheme();
@@ -243,21 +235,6 @@ export default function LoginPage() {
                     <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
                       Self-registration is disabled. If you need access, contact your system administrator to create and assign your account.
                     </p>
-                  </div>
-
-                  <div className="border-t border-slate-200/70 dark:border-slate-700/70 pt-4">
-                    <p className="mb-3 text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Quick Fill Demo Accounts</p>
-                    <div className="flex flex-wrap gap-2">
-                      {DEMO_ACCOUNTS.map(account => (
-                        <button
-                          key={account.role}
-                          onClick={() => setForm(prev => ({ ...prev, email: account.email, password: "Password123!" }))}
-                          className="rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:border-sky-300 hover:text-sky-700 dark:hover:border-sky-600 dark:hover:text-sky-400"
-                        >
-                          {account.role}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
