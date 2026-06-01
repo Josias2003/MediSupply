@@ -1,22 +1,28 @@
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Calendar, BarChart3 } from "lucide-react";
+import { Loader2, Calendar, BarChart3, Pill } from "lucide-react";
 import { useMemo, useState } from "react";
 import ExportReports from "@/components/ExportReports";
 
-type Preset = "monthly" | "quarterly" | "yearly" | "custom";
+type Preset = "daily" | "monthly" | "quarterly" | "yearly" | "custom";
 type ReportType = "inventory" | "orders" | "financial" | "budgets" | "users" | "logs";
 
 const REPORT_ORDER: ReportType[] = ["inventory", "orders", "financial", "budgets", "users", "logs"];
 
 export default function ReportingPage() {
+  const { user } = useAuth();
   const [preset, setPreset] = useState<Preset>("monthly");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [selectedMedicineId, setSelectedMedicineId] = useState<number | null>(null);
 
   const { data, isLoading } = trpc.export.allowedReports.useQuery();
+  const { data: medicines = [] } = trpc.supplies.list.useQuery(undefined, {
+    enabled: user?.role === "pharmacist",
+  });
 
   const allowedReports = useMemo(
     () => REPORT_ORDER.filter(type => (data?.reports ?? []).includes(type)),
@@ -39,6 +45,7 @@ export default function ReportingPage() {
           <Select value={preset} onValueChange={(value: Preset) => setPreset(value)}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="daily">Today</SelectItem>
               <SelectItem value="monthly">This Month</SelectItem>
               <SelectItem value="quarterly">This Quarter</SelectItem>
               <SelectItem value="yearly">This Year</SelectItem>
@@ -53,6 +60,24 @@ export default function ReportingPage() {
             </>
           )}
         </div>
+
+        {user?.role === "pharmacist" && (
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t pt-4">
+            <Pill className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filter by Medicine (Optional):</span>
+            <Select value={selectedMedicineId?.toString() || "all"} onValueChange={(val) => setSelectedMedicineId(val === "all" ? null : parseInt(val))}>
+              <SelectTrigger className="w-64"><SelectValue placeholder="All Medicines" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Medicines</SelectItem>
+                {medicines.map((med: any) => (
+                  <SelectItem key={med.id} value={med.id.toString()}>
+                    {med.name} ({med.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </Card>
 
       {isLoading ? (
@@ -73,6 +98,7 @@ export default function ReportingPage() {
               period={preset}
               dateFrom={customFrom}
               dateTo={customTo}
+              medicineId={user?.role === "pharmacist" ? selectedMedicineId : undefined}
             />
           ))}
         </div>
