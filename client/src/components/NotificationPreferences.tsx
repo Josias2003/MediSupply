@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/_core/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,7 +11,44 @@ interface NotificationPreferencesProps {
   onClose?: () => void;
 }
 
+// Define which notifications each role can see
+const ROLE_NOTIFICATION_ACCESS: Record<string, string[]> = {
+  pharmacist: ['lowStockAlerts', 'expiryWarnings', 'pendingApprovals', 'budgetAlerts'],
+  procurement_officer: ['pendingApprovals', 'orderUpdates', 'deliveryAlerts', 'budgetAlerts'],
+  supplier: ['orderUpdates', 'deliveryAlerts'],
+  accountant: ['budgetAlerts', 'orderUpdates'],
+  admin: ['lowStockAlerts', 'expiryWarnings', 'pendingApprovals', 'orderUpdates', 'deliveryAlerts', 'budgetAlerts'],
+};
+
+const NOTIFICATION_CONFIG = {
+  lowStockAlerts: {
+    label: 'Low Stock Alerts',
+    description: 'Notify when inventory falls below reorder point',
+  },
+  expiryWarnings: {
+    label: 'Expiry Warnings',
+    description: 'Alert for items approaching expiration',
+  },
+  pendingApprovals: {
+    label: 'Pending Approvals',
+    description: 'Notify about pending requisitions and orders',
+  },
+  orderUpdates: {
+    label: 'Order Updates',
+    description: 'Updates on purchase order status changes',
+  },
+  deliveryAlerts: {
+    label: 'Delivery Alerts',
+    description: 'Notify about late or delayed deliveries',
+  },
+  budgetAlerts: {
+    label: 'Budget Alerts',
+    description: 'Alert when spending approaches budget limits',
+  },
+};
+
 export default function NotificationPreferences({ onClose }: NotificationPreferencesProps) {
+  const { user } = useAuth();
   const { data: preferences, isLoading } = trpc.notificationPreferences.get.useQuery();
   const updateMutation = trpc.notificationPreferences.update.useMutation();
 
@@ -24,6 +62,9 @@ export default function NotificationPreferences({ onClose }: NotificationPrefere
     emailNotifications: preferences?.emailNotifications ?? false,
     frequency: preferences?.frequency ?? 'immediate',
   });
+
+  // Get notifications visible to this user's role
+  const visibleNotifications = ROLE_NOTIFICATION_ACCESS[user?.role || 'admin'] || [];
 
   const handleToggle = (key: string) => {
     setSettings(prev => ({
@@ -55,91 +96,33 @@ export default function NotificationPreferences({ onClose }: NotificationPrefere
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md bg-white rounded-lg shadow-lg">
+      <Card className="w-full max-w-md rounded-lg shadow-lg">
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-6">Notification Preferences</h2>
 
           <div className="space-y-4 mb-6">
             {/* Alert Type Toggles */}
             <div className="space-y-3">
-              <h3 className="font-medium text-sm text-gray-700">Alert Types</h3>
+              <h3 className="font-medium text-sm text-foreground">Alert Types</h3>
 
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                <Checkbox
-                  checked={settings.lowStockAlerts}
-                  onCheckedChange={() => handleToggle('lowStockAlerts')}
-                  id="lowStock"
-                />
-                <label htmlFor="lowStock" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-sm">Low Stock Alerts</div>
-                  <div className="text-xs text-gray-500">Notify when inventory falls below reorder point</div>
-                </label>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                <Checkbox
-                  checked={settings.expiryWarnings}
-                  onCheckedChange={() => handleToggle('expiryWarnings')}
-                  id="expiry"
-                />
-                <label htmlFor="expiry" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-sm">Expiry Warnings</div>
-                  <div className="text-xs text-gray-500">Alert for items approaching expiration</div>
-                </label>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                <Checkbox
-                  checked={settings.pendingApprovals}
-                  onCheckedChange={() => handleToggle('pendingApprovals')}
-                  id="approvals"
-                />
-                <label htmlFor="approvals" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-sm">Pending Approvals</div>
-                  <div className="text-xs text-gray-500">Notify about pending requisitions and orders</div>
-                </label>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                <Checkbox
-                  checked={settings.orderUpdates}
-                  onCheckedChange={() => handleToggle('orderUpdates')}
-                  id="orders"
-                />
-                <label htmlFor="orders" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-sm">Order Updates</div>
-                  <div className="text-xs text-gray-500">Updates on purchase order status changes</div>
-                </label>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                <Checkbox
-                  checked={settings.deliveryAlerts}
-                  onCheckedChange={() => handleToggle('deliveryAlerts')}
-                  id="delivery"
-                />
-                <label htmlFor="delivery" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-sm">Delivery Alerts</div>
-                  <div className="text-xs text-gray-500">Notify about late or delayed deliveries</div>
-                </label>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
-                <Checkbox
-                  checked={settings.budgetAlerts}
-                  onCheckedChange={() => handleToggle('budgetAlerts')}
-                  id="budget"
-                />
-                <label htmlFor="budget" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-sm">Budget Alerts</div>
-                  <div className="text-xs text-gray-500">Alert when spending approaches budget limits</div>
-                </label>
-              </div>
+              {visibleNotifications.map((notifKey) => (
+                <div key={notifKey} className="flex items-center gap-3 p-3 bg-muted rounded">
+                  <Checkbox
+                    checked={settings[notifKey as keyof typeof settings] as boolean}
+                    onCheckedChange={() => handleToggle(notifKey)}
+                    id={notifKey}
+                  />
+                  <label htmlFor={notifKey} className="flex-1 cursor-pointer">
+                    <div className="font-medium text-sm">{NOTIFICATION_CONFIG[notifKey as keyof typeof NOTIFICATION_CONFIG]?.label}</div>
+                    <div className="text-xs text-muted-foreground">{NOTIFICATION_CONFIG[notifKey as keyof typeof NOTIFICATION_CONFIG]?.description}</div>
+                  </label>
+                </div>
+              ))}
             </div>
 
             {/* Notification Frequency */}
             <div className="pt-4 border-t">
-              <h3 className="font-medium text-sm text-gray-700 mb-3">Notification Frequency</h3>
+              <h3 className="font-medium text-sm text-foreground mb-3">Notification Frequency</h3>
               <Select value={settings.frequency} onValueChange={handleFrequencyChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select frequency" />
@@ -154,7 +137,7 @@ export default function NotificationPreferences({ onClose }: NotificationPrefere
 
             {/* Email Notifications */}
             <div className="pt-4 border-t">
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded border border-blue-200">
+              <div className="flex items-center gap-3 p-3 bg-primary/10 rounded border border-primary/20">
                 <Checkbox
                   checked={settings.emailNotifications}
                   onCheckedChange={() => handleToggle('emailNotifications')}
@@ -162,7 +145,7 @@ export default function NotificationPreferences({ onClose }: NotificationPrefere
                 />
                 <label htmlFor="email" className="flex-1 cursor-pointer">
                   <div className="font-medium text-sm">Email Notifications</div>
-                  <div className="text-xs text-gray-500">Receive critical alerts via email</div>
+                  <div className="text-xs text-muted-foreground">Receive critical alerts via email</div>
                 </label>
               </div>
             </div>
@@ -180,7 +163,7 @@ export default function NotificationPreferences({ onClose }: NotificationPrefere
             <Button
               onClick={handleSave}
               disabled={updateMutation.isPending}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1"
             >
               {updateMutation.isPending ? 'Saving...' : 'Save Preferences'}
             </Button>

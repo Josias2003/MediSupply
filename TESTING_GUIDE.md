@@ -111,9 +111,9 @@ Recommended accounts for first testing:
 - Procurement: `bikomeye9@gmail.com`
 - Supplier: `nayihikisamuelnasri@gmail.com`
 - Accountant: `vianew440@gmail.com`
-
+                                    
 Accounts with 2FA enabled:
-
+                                    
 - Admin: `sindnepom@gmail.com`
 - Pharmacist: `blackhathackers2022@gmail.com`
 

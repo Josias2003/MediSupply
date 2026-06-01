@@ -87,6 +87,16 @@ export default function ProcurementDashboard() {
   const [chatReqId, setChatReqId]   = useState<number | null>(null);
   const [chatPoId, setChatPoId]     = useState<number | null>(null);
 
+  // Filter and sort state for purchase orders
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterSupplier, setFilterSupplier] = useState<string>("all");
+  const [filterCreatedFrom, setFilterCreatedFrom] = useState("");
+  const [filterCreatedTo, setFilterCreatedTo] = useState("");
+  const [filterDeliveryFrom, setFilterDeliveryFrom] = useState("");
+  const [filterDeliveryTo, setFilterDeliveryTo] = useState("");
+  const [sortBy, setSortBy] = useState<"createdAt" | "expectedDeliveryDate" | "totalAmount" | "status" | "supplier">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
   const { data: viewReqItems = [] } = trpc.requisitions.getItems.useQuery(
     { requisitionId: viewReqId! }, { enabled: viewReqId !== null }
   );
@@ -96,6 +106,74 @@ export default function ProcurementDashboard() {
   const viewReq = viewReqId !== null ? (requisitions as any[]).find((r: any) => r.id === viewReqId) : null;
 
   const resetPOForm = () => { setFromReqId(null); setPoSupplierId(""); setPoNotes(""); setPoDeliveryDate(""); setPoItems([{ supplyId: "", quantity: "", unitCost: "" }]); };
+
+  const hasActiveFilters = filterStatus !== "all" || filterSupplier !== "all" || filterCreatedFrom || filterCreatedTo || filterDeliveryFrom || filterDeliveryTo;
+
+  const applyFiltersAndSort = (items: any[]) => {
+    let filtered = items.filter((o: any) => {
+      // Status filter
+      if (filterStatus !== "all" && o.status !== filterStatus) return false;
+      // Supplier filter
+      if (filterSupplier !== "all" && o.supplierId !== Number(filterSupplier)) return false;
+      // Created date range filter
+      if (filterCreatedFrom) {
+        const createdDate = new Date(o.createdAt);
+        const fromDate = new Date(filterCreatedFrom);
+        if (createdDate < fromDate) return false;
+      }
+      if (filterCreatedTo) {
+        const createdDate = new Date(o.createdAt);
+        const toDate = new Date(filterCreatedTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (createdDate > toDate) return false;
+      }
+      // Expected delivery date range filter
+      if (filterDeliveryFrom && o.expectedDeliveryDate) {
+        const deliveryDate = new Date(o.expectedDeliveryDate);
+        const fromDate = new Date(filterDeliveryFrom);
+        if (deliveryDate < fromDate) return false;
+      }
+      if (filterDeliveryTo && o.expectedDeliveryDate) {
+        const deliveryDate = new Date(o.expectedDeliveryDate);
+        const toDate = new Date(filterDeliveryTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (deliveryDate > toDate) return false;
+      }
+      return true;
+    });
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a: any, b: any) => {
+      let compareVal = 0;
+      switch (sortBy) {
+        case "createdAt":
+          compareVal = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "expectedDeliveryDate":
+          if (!a.expectedDeliveryDate && !b.expectedDeliveryDate) compareVal = 0;
+          else if (!a.expectedDeliveryDate) compareVal = 1;
+          else if (!b.expectedDeliveryDate) compareVal = -1;
+          else compareVal = new Date(a.expectedDeliveryDate).getTime() - new Date(b.expectedDeliveryDate).getTime();
+          break;
+        case "totalAmount":
+          compareVal = Number(a.totalAmount) - Number(b.totalAmount);
+          break;
+        case "status":
+          compareVal = (a.status || "").localeCompare(b.status || "");
+          break;
+        case "supplier":
+          const supA = (suppliers as any[]).find((s: any) => s.id === a.supplierId)?.name || "";
+          const supB = (suppliers as any[]).find((s: any) => s.id === b.supplierId)?.name || "";
+          compareVal = supA.localeCompare(supB);
+          break;
+      }
+      return sortOrder === "desc" ? -compareVal : compareVal;
+    });
+
+    return sorted;
+  };
+
+  const filteredAndSortedOrders = applyFiltersAndSort(orders);
 
   const openPOFromReq = (req: any, items: any[]) => {
     setFromReqId(req.id);
@@ -260,9 +338,163 @@ export default function ProcurementDashboard() {
       {/* ── ORDERS TAB ── */}
       {tab === "orders" && (
         <div className="space-y-3">
+          {/* Filter Section */}
+          <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
+            {/* Status Filter - Chips */}
+            <div>
+              <p className="text-sm font-medium mb-2">Status</p>
+              <div className="flex flex-wrap gap-2">
+                {["all", "draft", "sent", "acknowledged", "partial_delivery", "delivered", "cancelled"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      filterStatus === status
+                        ? "ring-2 ring-primary bg-primary text-white"
+                        : "bg-white border hover:border-primary cursor-pointer"
+                    }`}
+                  >
+                    {status === "all" ? "All Statuses" : status.replace(/_/g, " ")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Supplier, Date Range, and Sort - Grid Layout */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Supplier Filter */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Supplier</label>
+                <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="All suppliers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Suppliers</SelectItem>
+                    {(suppliers as any[]).map((s: any) => (
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Created Date From */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Created From</label>
+                <Input
+                  type="date"
+                  value={filterCreatedFrom}
+                  onChange={(e) => setFilterCreatedFrom(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Created Date To */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Created To</label>
+                <Input
+                  type="date"
+                  value={filterCreatedTo}
+                  onChange={(e) => setFilterCreatedTo(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Expected Delivery From */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Due From</label>
+                <Input
+                  type="date"
+                  value={filterDeliveryFrom}
+                  onChange={(e) => setFilterDeliveryFrom(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Expected Delivery To */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Due To</label>
+                <Input
+                  type="date"
+                  value={filterDeliveryTo}
+                  onChange={(e) => setFilterDeliveryTo(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Sort By</label>
+                <Select value={sortBy} onValueChange={(val) => setSortBy(val as any)}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="createdAt">Date Created</SelectItem>
+                    <SelectItem value="expectedDeliveryDate">Expected Delivery</SelectItem>
+                    <SelectItem value="totalAmount">Total Amount</SelectItem>
+                    <SelectItem value="status">Status</SelectItem>
+                    <SelectItem value="supplier">Supplier</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort Order */}
+              <div>
+                <label className="text-xs font-medium block mb-1">Order</label>
+                <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as "asc" | "desc")}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="desc">Descending</SelectItem>
+                    <SelectItem value="asc">Ascending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <div className="flex items-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-8 text-xs"
+                    onClick={() => {
+                      setFilterStatus("all");
+                      setFilterSupplier("all");
+                      setFilterCreatedFrom("");
+                      setFilterCreatedTo("");
+                      setFilterDeliveryFrom("");
+                      setFilterDeliveryTo("");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Orders List */}
           {allOrders.length === 0 ? (
             <Card className="p-10 text-center text-muted-foreground"><ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />No orders yet</Card>
-          ) : allOrders.map((o: any) => {
+          ) : filteredAndSortedOrders.length === 0 ? (
+            <Card className="p-10 text-center text-muted-foreground">
+              <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p>No orders match your filters</p>
+              <Button variant="link" size="sm" className="mt-2" onClick={() => {
+                setFilterStatus("all");
+                setFilterSupplier("all");
+                setFilterCreatedFrom("");
+                setFilterCreatedTo("");
+                setFilterDeliveryFrom("");
+                setFilterDeliveryTo("");
+              }}>Clear filters</Button>
+            </Card>
+          ) : filteredAndSortedOrders.map((o: any) => {
             const isExp = expandedPO === o.id;
             const isOverdue = o.expectedDeliveryDate && new Date(o.expectedDeliveryDate) < new Date() && !["delivered","cancelled"].includes(o.status);
             return (

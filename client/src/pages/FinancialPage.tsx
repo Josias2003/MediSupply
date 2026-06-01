@@ -101,7 +101,7 @@ export default function FinancialPage() {
                   {inv.status !== "paid" && inv.status !== "cancelled" && (
                     <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => {
                       setSelectedInv(inv);
-                      setPayForm(p => ({ ...p, amount: (Number(inv.totalAmount) - Number(inv.paidAmount || 0)).toFixed(2) }));
+                      setPayForm(p => ({ ...p, amount: (Number(inv.totalAmount) - Number(inv.paidAmount || 0)).toFixed(0) }));
                       setShowPayment(true);
                     }}><CreditCard className="w-3 h-3 mr-1" />Record Payment</Button>
                   )}
@@ -149,7 +149,7 @@ export default function FinancialPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Record Payment — {selectedInv?.invoiceNumber}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><label className="text-sm font-medium">Amount (RWF)</label><Input type="number" step="0.01" value={payForm.amount} onChange={e => setPayForm(p => ({ ...p, amount: e.target.value }))} /></div>
+            <div><label className="text-sm font-medium">Amount (RWF)</label><Input type="number" step="1" min="0" value={payForm.amount} onChange={e => setPayForm(p => ({ ...p, amount: e.target.value.replace(/[^0-9]/g, '') }))} /></div>
             <div><label className="text-sm font-medium">Payment Method</label>
               <Select value={payForm.method} onValueChange={v => setPayForm(p => ({ ...p, method: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -178,7 +178,7 @@ export default function FinancialPage() {
           <DialogHeader><DialogTitle>Create Budget Allocation</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><label className="text-sm font-medium">Department *</label><Input value={budgetForm.department} onChange={e => setBudgetForm(p => ({ ...p, department: e.target.value }))} placeholder="Pharmacy" /></div>
-            <div><label className="text-sm font-medium">Allocated Amount (RWF) *</label><Input type="number" step="0.01" value={budgetForm.allocatedAmount} onChange={e => setBudgetForm(p => ({ ...p, allocatedAmount: e.target.value }))} /></div>
+            <div><label className="text-sm font-medium">Allocated Amount (RWF) *</label><Input type="number" step="1" min="0" value={budgetForm.allocatedAmount} onChange={e => setBudgetForm(p => ({ ...p, allocatedAmount: e.target.value.replace(/[^0-9]/g, '') }))} /></div>
             <div><label className="text-sm font-medium">Fiscal Year *</label><Input type="number" value={budgetForm.fiscalYear} onChange={e => setBudgetForm(p => ({ ...p, fiscalYear: e.target.value }))} /></div>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setShowBudget(false)}>Cancel</Button>

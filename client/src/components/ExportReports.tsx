@@ -9,9 +9,10 @@ import { toast } from "sonner";
 
 interface ExportReportsProps {
   reportType: "inventory" | "suppliers" | "orders" | "financial" | "budgets" | "users" | "logs";
-  period?: string;        // e.g. "Monthly — March 2026"
+  period?: string;        // e.g. "daily", "monthly", "quarterly", "yearly", "custom"
   dateFrom?: string;
   dateTo?: string;
+  medicineId?: number | null;  // For pharmacist medicine-specific reports
 }
 
 const REPORT_LABELS: Record<string, string> = {
@@ -46,13 +47,18 @@ function buildPrintableHTML(
   data: any[],
   period: string,
   dateFrom: string,
-  dateTo: string
+  dateTo: string,
+  medicineName?: string
 ): string {
   const title = REPORT_LABELS[reportType] || reportType;
   const generatedAt = new Date().toLocaleString("en-RW", { dateStyle: "full", timeStyle: "short" });
-  const periodLabel = period && period !== "custom"
-    ? { monthly: "Monthly", quarterly: "Quarterly", yearly: "Annual", custom: "Custom Range" }[period] ?? period
-    : dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : "All Time";
+  const periodLabel = {
+    daily: "Today",
+    monthly: "Monthly",
+    quarterly: "Quarterly",
+    yearly: "Annual",
+    custom: dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : "Custom Range"
+  }[period] ?? period;
 
   if (!data || data.length === 0) {
     return `<html><body><p>No data available for this report.</p></body></html>`;
@@ -166,11 +172,15 @@ function buildPrintableHTML(
 }
 
 // ── CSV header block ─────────────────────────────────────────────
-function buildCSVWithHeader(reportType: string, data: any[], period: string, dateFrom: string, dateTo: string): string {
+function buildCSVWithHeader(reportType: string, data: any[], period: string, dateFrom: string, dateTo: string, medicineName?: string): string {
   const title = REPORT_LABELS[reportType] || reportType;
-  const periodLabel = period === "custom" && dateFrom && dateTo
-    ? `${dateFrom} to ${dateTo}`
-    : { monthly: "Monthly", quarterly: "Quarterly", yearly: "Annual" }[period] ?? "All Time";
+  const periodLabel = {
+    daily: "Today",
+    monthly: "Monthly",
+    quarterly: "Quarterly",
+    yearly: "Annual",
+    custom: dateFrom && dateTo ? `${dateFrom} to ${dateTo}` : "Custom Range"
+  }[period] ?? "All Time";
 
   const header = [
     `# ${SYSTEM_NAME}`,
@@ -184,7 +194,7 @@ function buildCSVWithHeader(reportType: string, data: any[], period: string, dat
   return header + "\n" + toCSV(data);
 }
 
-export default function ExportReports({ reportType, period = "monthly", dateFrom = "", dateTo = "" }: ExportReportsProps) {
+export default function ExportReports({ reportType, period = "monthly", dateFrom = "", dateTo = "", medicineId }: ExportReportsProps) {
   const [exportFormat, setExportFormat] = useState<"csv" | "pdf">("csv");
   const [customFrom, setCustomFrom] = useState(dateFrom);
   const [customTo, setCustomTo] = useState(dateTo);
@@ -212,7 +222,12 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
       };
 
       const result = await queryMap[reportType].refetch();
-      const data: any[] = result.data?.data ?? [];
+      let data: any[] = result.data?.data ?? [];
+
+      // Filter by medicine if medicineId is provided (pharmacy-specific reports)
+      if (medicineId && reportType === "inventory") {
+        data = data.filter((item: any) => item.id === medicineId);
+      }
 
       if (!data || data.length === 0) {
         toast.error("No data available for this report");
@@ -220,17 +235,18 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
       }
 
       const dateStr = new Date().toISOString().split("T")[0];
-      const filename = `${reportType}-report-${dateStr}`;
+      const medicineName = medicineId ? `- Medicine #${medicineId}` : "";
+      const filename = `${reportType}-report-${dateStr}${medicineId ? `-med${medicineId}` : ""}`;
       const effectivePeriod = period || "monthly";
 
       if (exportFormat === "csv") {
-        const csv = buildCSVWithHeader(reportType, data, effectivePeriod, customFrom, customTo);
+        const csv = buildCSVWithHeader(reportType, data, effectivePeriod, customFrom, customTo, medicineName);
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         downloadBlob(blob, `${filename}.csv`);
         toast.success(`${REPORT_LABELS[reportType]} exported as CSV`);
       } else {
         // Open printable HTML in new tab — browser's native print-to-PDF
-        const html = buildPrintableHTML(reportType, data, effectivePeriod, customFrom, customTo);
+        const html = buildPrintableHTML(reportType, data, effectivePeriod, customFrom, customTo, medicineName);
         const win = window.open("", "_blank");
         if (win) {
           win.document.write(html);

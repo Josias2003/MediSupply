@@ -89,7 +89,7 @@ export default function InventoryPage() {
       currentStock: parseInt(form.currentStock) || 0,
       reorderPoint: parseInt(form.reorderPoint) || 0,
       reorderQuantity: parseInt(form.reorderQuantity) || 0,
-      unitCost: form.unitCost,
+      unitCost: form.unitCost.trim(),
       supplierId: form.supplierId ? parseInt(form.supplierId) : undefined,
       expiryDate: form.expiryDate ? new Date(form.expiryDate) : undefined,
       batchNumber: form.batchNumber || undefined,
@@ -107,7 +107,7 @@ export default function InventoryPage() {
     if (editForm.currentStock !== "") data.currentStock = parseInt(editForm.currentStock);
     if (editForm.reorderPoint !== "") data.reorderPoint = parseInt(editForm.reorderPoint);
     if (editForm.reorderQuantity !== "") data.reorderQuantity = parseInt(editForm.reorderQuantity);
-    if (editForm.unitCost) data.unitCost = editForm.unitCost;
+    if (editForm.unitCost) data.unitCost = editForm.unitCost.trim();
     data.supplierId = editForm.supplierId ? parseInt(editForm.supplierId) : null;
     data.expiryDate = editForm.expiryDate ? new Date(editForm.expiryDate) : null;
     data.batchNumber = editForm.batchNumber || undefined;
@@ -244,7 +244,7 @@ export default function InventoryPage() {
             <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Opening Stock</label>
               <Input type="number" min="0" value={form.currentStock} onChange={e => setForm(p => ({ ...p, currentStock: e.target.value }))} placeholder="0" /></div>
             <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Unit Cost (RWF) *</label>
-              <Input type="number" step="0.01" min="0" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} placeholder="0" /></div>
+              <Input type="number" step="1" min="0" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value.replace(/[^0-9]/g, '') }))} placeholder="0" /></div>
 
             <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Reorder Point</label>
               <Input type="number" min="0" value={form.reorderPoint} onChange={e => setForm(p => ({ ...p, reorderPoint: e.target.value }))} placeholder="50" /></div>
@@ -300,7 +300,7 @@ export default function InventoryPage() {
               <Input type="number" min="0" value={editForm.currentStock ?? ""} onChange={e => setEditForm(p => ({ ...p, currentStock: e.target.value }))} /></div>
 
             <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Unit Cost (RWF)</label>
-              <Input type="number" step="0.01" value={editForm.unitCost ?? ""} onChange={e => setEditForm(p => ({ ...p, unitCost: e.target.value }))} /></div>
+              <Input type="number" step="1" min="0" value={editForm.unitCost ?? ""} onChange={e => setEditForm(p => ({ ...p, unitCost: e.target.value.replace(/[^0-9]/g, '') }))} /></div>
             <div><label className="text-xs font-medium text-muted-foreground mb-1 block">Reorder Point</label>
               <Input type="number" min="0" value={editForm.reorderPoint ?? ""} onChange={e => setEditForm(p => ({ ...p, reorderPoint: e.target.value }))} /></div>
 

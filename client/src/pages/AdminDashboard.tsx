@@ -1,17 +1,10 @@
 import { trpc } from "@/lib/trpc";
+import { getRoleColors } from "@/utils/roleColors";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Users, Shield, UserCheck, UserX, Activity, Building2, BarChart3 } from "lucide-react";
 import { useLocation } from "wouter";
-
-const ROLE_COLOR: Record<string, string> = {
-  pharmacist: "bg-blue-100 text-blue-800",
-  procurement_officer: "bg-orange-100 text-orange-800",
-  supplier: "bg-teal-100 text-teal-800",
-  accountant: "bg-purple-100 text-purple-800",
-  admin: "bg-red-100 text-red-800",
-};
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
@@ -46,10 +39,10 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
-          { label: "Total Users", value: (users as any[]).length, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Active", value: activeUsers.length, icon: UserCheck, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Inactive", value: inactiveUsers.length, icon: UserX, color: "text-red-600", bg: "bg-red-50" },
-          { label: "Audit Entries", value: logs?.logs?.length ?? 0, icon: Activity, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Total Users", value: (users as any[]).length, icon: Users, color: "text-primary", bg: "bg-primary/10" },
+          { label: "Active", value: activeUsers.length, icon: UserCheck, color: "text-status-success-text", bg: "bg-status-success-bg" },
+          { label: "Inactive", value: inactiveUsers.length, icon: UserX, color: "text-destructive", bg: "bg-destructive/10" },
+          { label: "Audit Entries", value: logs?.logs?.length ?? 0, icon: Activity, color: "text-secondary", bg: "bg-secondary/10" },
         ].map((s, i) => (
           <Card key={i} className={`p-4 ${s.bg}`}>
             <div className="flex items-center justify-between">
@@ -66,7 +59,7 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             {Object.entries(byRole).map(([role, count]) => (
               <div key={role} className="flex items-center justify-between border-b py-1 last:border-0">
-                <Badge className={`${ROLE_COLOR[role] || "bg-gray-100 text-gray-700"} text-xs`}>{ROLE_LABELS[role] || role}</Badge>
+                <Badge className={`${getRoleColors(role).bg} ${getRoleColors(role).text} text-xs`}>{ROLE_LABELS[role] || role}</Badge>
                 <span className="text-sm font-semibold">{count as number}</span>
               </div>
             ))}

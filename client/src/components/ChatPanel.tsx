@@ -3,20 +3,13 @@
  * Supplier <-> Procurement on POs, Pharmacist <-> Procurement on Requisitions.
  */
 import { trpc } from "@/lib/trpc";
+import { getRoleColors } from "@/utils/roleColors";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, MessageSquare, Pencil, Reply, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
-
-const ROLE_COLOR: Record<string, string> = {
-  pharmacist: "bg-blue-100 text-blue-800",
-  procurement_officer: "bg-orange-100 text-orange-800",
-  supplier: "bg-teal-100 text-teal-800",
-  accountant: "bg-purple-100 text-purple-800",
-  admin: "bg-gray-100 text-gray-700",
-};
 
 const ROLE_LABEL: Record<string, string> = {
   pharmacist: "Pharmacist",
@@ -139,7 +132,7 @@ export default function ChatPanel({ entityType, entityId, entityLabel }: Props) 
             <div key={msg.id} className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {!isMe && <span className="font-medium text-foreground">{msg.userName}</span>}
-                <span className={`rounded px-1.5 py-0.5 text-xs ${ROLE_COLOR[msg.userRole] || "bg-gray-100 text-gray-700"}`}>
+                <span className={`rounded px-1.5 py-0.5 text-xs ${getRoleColors(msg.userRole).bg} ${getRoleColors(msg.userRole).text}`}>
                   {ROLE_LABEL[msg.userRole] || msg.userRole}
                 </span>
                 {isMe && <span className="font-medium text-foreground">You</span>}

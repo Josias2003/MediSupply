@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { getActionColors } from "@/utils/roleColors";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,21 +8,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, ClipboardList, Shield, User, Clock } from "lucide-react";
 import { useState } from "react";
 
-const ACTION_COLOR: Record<string, string> = {
-  CREATE: "bg-green-100 text-green-700", UPDATE: "bg-blue-100 text-blue-700",
-  DELETE: "bg-red-100 text-red-700", APPROVE: "bg-emerald-100 text-emerald-700",
-  REJECT: "bg-red-100 text-red-700", SUBMIT: "bg-amber-100 text-amber-700",
-  RECORD: "bg-teal-100 text-teal-700", LOG: "bg-yellow-100 text-yellow-700",
-  LOGIN: "bg-purple-100 text-purple-700", CHANGE: "bg-indigo-100 text-indigo-700",
-  CANCEL: "bg-red-100 text-red-700", SUPPLIER: "bg-orange-100 text-orange-700",
-  GENERATE: "bg-violet-100 text-violet-700", ACTIVATE: "bg-green-100 text-green-700",
-  DEACTIVATE: "bg-gray-100 text-gray-700",
-};
 function getActionColor(action: string) {
-  for (const [key, val] of Object.entries(ACTION_COLOR)) {
-    if (action?.startsWith(key)) return val;
-  }
-  return "bg-gray-100 text-gray-700";
+  const actionType = action?.split("_")[0]?.toLowerCase() || "";
+  const mapping: Record<string, string> = {
+    create: "added",
+    delete: "deleted",
+    update: "modified",
+    approve: "added",
+    reject: "deleted",
+    submit: "modified",
+    record: "modified",
+    log: "modified",
+    login: "viewed",
+    change: "modified",
+    cancel: "deleted",
+    supplier: "modified",
+    generate: "added",
+    activate: "added",
+    deactivate: "deleted",
+  };
+  const colorType = mapping[actionType] || "modified";
+  const colors = getActionColors(colorType);
+  return `${colors.bg} ${colors.text}`;
 }
 
 export default function AuditLogsPage() {

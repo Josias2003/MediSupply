@@ -40,6 +40,34 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-role-admin-bg: var(--role-admin-bg);
+  --color-role-admin-text: var(--role-admin-text);
+  --color-role-pharmacist-bg: var(--role-pharmacist-bg);
+  --color-role-pharmacist-text: var(--role-pharmacist-text);
+  --color-role-procurement-bg: var(--role-procurement-bg);
+  --color-role-procurement-text: var(--role-procurement-text);
+  --color-role-supplier-bg: var(--role-supplier-bg);
+  --color-role-supplier-text: var(--role-supplier-text);
+  --color-role-accountant-bg: var(--role-accountant-bg);
+  --color-role-accountant-text: var(--role-accountant-text);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-text: var(--status-success-text);
+  --color-status-error-bg: var(--status-error-bg);
+  --color-status-error-text: var(--status-error-text);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-text: var(--status-warning-text);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-text: var(--status-info-text);
+  --color-action-added-bg: var(--action-added-bg);
+  --color-action-added-text: var(--action-added-text);
+  --color-action-modified-bg: var(--action-modified-bg);
+  --color-action-modified-text: var(--action-modified-text);
+  --color-action-deleted-bg: var(--action-deleted-bg);
+  --color-action-deleted-text: var(--action-deleted-text);
+  --color-action-viewed-bg: var(--action-viewed-bg);
+  --color-action-viewed-text: var(--action-viewed-text);
+  --color-action-downloaded-bg: var(--action-downloaded-bg);
+  --color-action-downloaded-text: var(--action-downloaded-text);
 }
 
 :root {
@@ -48,14 +76,14 @@
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-700);
   --sidebar-primary-foreground: var(--color-blue-50);
-  
+
   /* Emerald Green - Health and growth */
   --chart-1: var(--color-emerald-300);
   --chart-2: var(--color-emerald-500);
   --chart-3: var(--color-emerald-600);
   --chart-4: var(--color-teal-600);
   --chart-5: var(--color-cyan-600);
-  
+
   --radius: 0.65rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0.02 260);
@@ -63,30 +91,64 @@
   --card-foreground: oklch(0.15 0.02 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.02 260);
-  
+
   /* Teal secondary for accents */
   --secondary: oklch(0.52 0.15 200);
   --secondary-foreground: oklch(1 0 0);
-  
+
   --muted: oklch(0.95 0.005 260);
   --muted-foreground: oklch(0.45 0.01 260);
-  
+
   /* Emerald accent for success states */
   --accent: oklch(0.62 0.18 160);
   --accent-foreground: oklch(1 0 0);
-  
+
   --destructive: oklch(0.58 0.25 30);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.93 0.003 260);
   --input: oklch(0.96 0.002 260);
   --ring: oklch(0.55 0.2 260);
-  
+
   --sidebar: oklch(0.98 0.001 260);
   --sidebar-foreground: oklch(0.15 0.02 260);
   --sidebar-accent: oklch(0.95 0.005 260);
   --sidebar-accent-foreground: oklch(0.15 0.02 260);
   --sidebar-border: oklch(0.93 0.003 260);
   --sidebar-ring: oklch(0.55 0.2 260);
+
+  /* Role Badges - Light Mode */
+  --role-admin-bg: var(--color-red-100);
+  --role-admin-text: var(--color-red-800);
+  --role-pharmacist-bg: var(--color-blue-100);
+  --role-pharmacist-text: var(--color-blue-800);
+  --role-procurement-bg: var(--color-purple-100);
+  --role-procurement-text: var(--color-purple-800);
+  --role-supplier-bg: var(--color-orange-100);
+  --role-supplier-text: var(--color-orange-800);
+  --role-accountant-bg: var(--color-green-100);
+  --role-accountant-text: var(--color-green-800);
+
+  /* Status Badges - Light Mode */
+  --status-success-bg: var(--color-emerald-100);
+  --status-success-text: var(--color-emerald-800);
+  --status-error-bg: var(--color-red-100);
+  --status-error-text: var(--color-red-800);
+  --status-warning-bg: var(--color-amber-100);
+  --status-warning-text: var(--color-amber-800);
+  --status-info-bg: var(--color-blue-100);
+  --status-info-text: var(--color-blue-800);
+
+  /* Action Badges - Light Mode */
+  --action-added-bg: var(--color-green-100);
+  --action-added-text: var(--color-green-700);
+  --action-modified-bg: var(--color-blue-100);
+  --action-modified-text: var(--color-blue-700);
+  --action-deleted-bg: var(--color-red-100);
+  --action-deleted-text: var(--color-red-700);
+  --action-viewed-bg: var(--color-purple-100);
+  --action-viewed-text: var(--color-purple-700);
+  --action-downloaded-bg: var(--color-teal-100);
+  --action-downloaded-text: var(--color-teal-700);
 }
 
 .dark {
@@ -94,41 +156,75 @@
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-600);
   --sidebar-primary-foreground: var(--color-blue-50);
-  
+
   --background: oklch(0.12 0.01 260);
   --foreground: oklch(0.92 0.01 260);
   --card: oklch(0.18 0.01 260);
   --card-foreground: oklch(0.92 0.01 260);
   --popover: oklch(0.18 0.01 260);
   --popover-foreground: oklch(0.92 0.01 260);
-  
+
   --secondary: oklch(0.52 0.15 200);
   --secondary-foreground: oklch(0.12 0.01 260);
-  
+
   --muted: oklch(0.28 0.01 260);
   --muted-foreground: oklch(0.7 0.01 260);
-  
+
   --accent: oklch(0.62 0.18 160);
   --accent-foreground: oklch(0.12 0.01 260);
-  
+
   --destructive: oklch(0.65 0.22 30);
   --destructive-foreground: oklch(0.12 0.01 260);
   --border: oklch(0.25 0.01 260);
   --input: oklch(0.22 0.01 260);
   --ring: oklch(0.55 0.2 260);
-  
+
   --chart-1: var(--color-emerald-400);
   --chart-2: var(--color-emerald-500);
   --chart-3: var(--color-teal-500);
   --chart-4: var(--color-cyan-500);
   --chart-5: var(--color-blue-500);
-  
+
   --sidebar: oklch(0.18 0.01 260);
   --sidebar-foreground: oklch(0.92 0.01 260);
   --sidebar-accent: oklch(0.28 0.01 260);
   --sidebar-accent-foreground: oklch(0.92 0.01 260);
   --sidebar-border: oklch(0.25 0.01 260);
   --sidebar-ring: oklch(0.55 0.2 260);
+
+  /* Role Badges - Dark Mode */
+  --role-admin-bg: var(--color-red-950);
+  --role-admin-text: var(--color-red-300);
+  --role-pharmacist-bg: var(--color-blue-950);
+  --role-pharmacist-text: var(--color-blue-300);
+  --role-procurement-bg: var(--color-purple-950);
+  --role-procurement-text: var(--color-purple-300);
+  --role-supplier-bg: var(--color-orange-950);
+  --role-supplier-text: var(--color-orange-300);
+  --role-accountant-bg: var(--color-green-950);
+  --role-accountant-text: var(--color-green-300);
+
+  /* Status Badges - Dark Mode */
+  --status-success-bg: var(--color-emerald-950);
+  --status-success-text: var(--color-emerald-300);
+  --status-error-bg: var(--color-red-950);
+  --status-error-text: var(--color-red-300);
+  --status-warning-bg: var(--color-amber-950);
+  --status-warning-text: var(--color-amber-300);
+  --status-info-bg: var(--color-blue-950);
+  --status-info-text: var(--color-blue-300);
+
+  /* Action Badges - Dark Mode */
+  --action-added-bg: var(--color-green-950);
+  --action-added-text: var(--color-green-400);
+  --action-modified-bg: var(--color-blue-950);
+  --action-modified-text: var(--color-blue-400);
+  --action-deleted-bg: var(--color-red-950);
+  --action-deleted-text: var(--color-red-400);
+  --action-viewed-bg: var(--color-purple-950);
+  --action-viewed-text: var(--color-purple-400);
+  --action-downloaded-bg: var(--color-teal-950);
+  --action-downloaded-text: var(--color-teal-400);
 }
 
 @layer base {

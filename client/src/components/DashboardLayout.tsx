@@ -1,4 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useTheme } from "@/contexts/ThemeContext";
+import { getRoleColors } from "@/utils/roleColors";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -22,7 +24,7 @@ import {
 import { useIsMobile } from "@/hooks/useMobile";
 import {
   LayoutDashboard, LogOut, PanelLeft, Package, ShoppingCart, Users,
-  DollarSign, BarChart3, Truck, Bell, ClipboardList, TrendingUp, UserCircle,
+  DollarSign, BarChart3, Truck, Bell, ClipboardList, TrendingUp, UserCircle, Moon, Sun,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -89,6 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 function DashboardLayoutContent({ setSidebarWidth, children }: { setSidebarWidth: (w: number) => void; children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { isOpen: isCollapsed, toggleSidebar } = useSidebar();
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -122,12 +125,6 @@ function DashboardLayoutContent({ setSidebarWidth, children }: { setSidebarWidth
       document.body.style.userSelect = "";
     };
   }, [isResizing, setSidebarWidth]);
-
-  const roleColors: Record<string, string> = {
-    admin: "bg-red-100 text-red-700", pharmacist: "bg-blue-100 text-blue-700",
-    procurement_officer: "bg-purple-100 text-purple-700", supplier: "bg-orange-100 text-orange-700",
-    accountant: "bg-green-100 text-green-700",
-  };
 
   return (
     <>
@@ -168,7 +165,7 @@ function DashboardLayoutContent({ setSidebarWidth, children }: { setSidebarWidth
 
           <SidebarFooter className="p-3 border-t">
             {!isCollapsed && user?.role && (
-              <div className={`text-xs px-2 py-1 rounded mb-2 font-medium ${roleColors[user.role] ?? "bg-gray-100 text-gray-700"}`}>
+              <div className={`text-xs px-2 py-1 rounded mb-2 font-medium ${getRoleColors(user.role).bg} ${getRoleColors(user.role).text}`}>
                 {user.role.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
               </div>
             )}
@@ -207,7 +204,16 @@ function DashboardLayoutContent({ setSidebarWidth, children }: { setSidebarWidth
               <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
               <span className="tracking-tight text-foreground">{activeMenuItem?.label ?? "Menu"}</span>
             </div>
-            {(unreadCount as number) > 0 && <Badge className="bg-red-500 text-white mr-2">{unreadCount as number} New</Badge>}
+            <div className="flex items-center gap-2">
+              {(unreadCount as number) > 0 && <Badge className="bg-red-500 text-white">{unreadCount as number} New</Badge>}
+              <button
+                onClick={() => toggleTheme?.()}
+                className="inline-flex items-center gap-2 rounded-lg p-2 text-sm hover:bg-accent transition-colors"
+                title={theme === "dark" ? "Light mode" : "Dark mode"}
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         )}
         <main className="flex-1 p-4 md:p-6">{children}</main>

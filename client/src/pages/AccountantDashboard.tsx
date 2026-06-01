@@ -1,5 +1,6 @@
 import { formatRWF, formatRWFCompact } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
+import { getStatusColors } from "@/utils/roleColors";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,24 @@ import { Loader2, DollarSign, TrendingUp, CreditCard, FileText, Plus, AlertTrian
 import { useState } from "react";
 import { toast } from "sonner";
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: "Pending", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
-  partial: { label: "Partial", color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-  paid: { label: "Paid", color: "text-green-700", bg: "bg-green-50 border-green-200" },
-  overdue: { label: "Overdue", color: "text-red-700", bg: "bg-red-50 border-red-200" },
-  cancelled: { label: "Cancelled", color: "text-gray-600", bg: "bg-gray-50 border-gray-200" },
+const STATUS_CONFIG: Record<string, { label: string }> = {
+  pending: { label: "Pending" },
+  partial: { label: "Partial" },
+  paid: { label: "Paid" },
+  overdue: { label: "Overdue" },
+  cancelled: { label: "Cancelled" },
 };
+
+function getInvoiceStatusColor(status: string) {
+  const mapping: Record<string, { color: string; bg: string }> = {
+    pending: { color: "text-status-warning-text", bg: "bg-[color:var(--status-warning-bg)] border-[color:var(--status-warning-bg)]" },
+    partial: { color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+    paid: { color: "text-status-success-text", bg: "bg-[color:var(--status-success-bg)] border-[color:var(--status-success-bg)]" },
+    overdue: { color: "text-destructive", bg: "bg-destructive/10 border-destructive/20" },
+    cancelled: { color: "text-muted-foreground", bg: "bg-muted border-border" },
+  };
+  return mapping[status] || mapping.pending;
+}
 
 export default function AccountantDashboard() {
   const utils = trpc.useUtils();
@@ -72,7 +84,7 @@ export default function AccountantDashboard() {
 
   const openPayment = (inv: any) => {
     setSelectedInv(inv);
-    setPayForm(prev => ({ ...prev, amount: (Number(inv.totalAmount) - Number(inv.paidAmount || 0)).toFixed(2) }));
+    setPayForm(prev => ({ ...prev, amount: (Number(inv.totalAmount) - Number(inv.paidAmount || 0)).toFixed(0) }));
     setShowPayment(true);
   };
 
@@ -97,30 +109,33 @@ export default function AccountantDashboard() {
         </div>
       </div>
 
-      <Card className="flex items-start gap-3 border-amber-200 bg-amber-50 p-4">
-        <AlertTriangle className="mt-0.5 w-5 h-5 shrink-0 text-amber-600" />
+      <Card className="flex items-start gap-3 border-[color:var(--status-warning-bg)] bg-[color:var(--status-warning-bg)]/10 p-4">
+        <AlertTriangle className="mt-0.5 w-5 h-5 shrink-0 text-status-warning-text" />
         <div>
-          <p className="text-sm font-medium text-amber-800">Finance does not create invoices here.</p>
-          <p className="mt-1 text-xs text-amber-700">Invoices must come from the supplier after pharmacy confirms receipt. Finance only reviews, records payments, and tracks balances.</p>
+          <p className="text-sm font-medium text-status-warning-text">Finance does not create invoices here.</p>
+          <p className="mt-1 text-xs text-status-warning-text/80">Invoices must come from the supplier after pharmacy confirms receipt. Finance only reviews, records payments, and tracks balances.</p>
         </div>
       </Card>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
-          { label: "Outstanding Balance", value: formatRWFCompact(totalOwed), sub: `${pending.length + overdue.length} invoices`, color: "text-red-600", bg: "bg-red-50", icon: AlertTriangle },
-          { label: "Overdue", value: overdue.length, sub: "past due date", color: "text-orange-600", bg: "bg-orange-50", icon: Clock },
-          { label: "Total Paid", value: formatRWFCompact(totalPaid), sub: `${(invoices as any[]).filter((i: any) => i.status === "paid").length} invoices`, color: "text-green-600", bg: "bg-green-50", icon: CheckCircle },
-          { label: "Budget Utilisation", value: `${budgetSummary?.totalAllocated ? (((budgetSummary.totalSpent || 0) / budgetSummary.totalAllocated) * 100).toFixed(0) : 0}%`, sub: `${formatRWFCompact(budgetSummary?.totalSpent || 0)} of ${formatRWFCompact(budgetSummary?.totalAllocated || 0)}`, color: "text-blue-600", bg: "bg-blue-50", icon: TrendingUp },
-        ].map((item, index) => (
-          <Card key={index} className={`p-4 ${item.bg}`}>
-            <div className="mb-1 flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
-              <item.icon className={`w-4 h-4 ${item.color} opacity-70`} />
-            </div>
-            <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
-            <p className="text-xs text-muted-foreground">{item.sub}</p>
-          </Card>
-        ))}
+          { label: "Outstanding Balance", value: formatRWFCompact(totalOwed), sub: `${pending.length + overdue.length} invoices`, color: "text-destructive", bg: "bg-destructive/10", icon: AlertTriangle },
+          { label: "Overdue", value: overdue.length, sub: "past due date", color: "text-status-warning-text", bg: "bg-[color:var(--status-warning-bg)]/10", icon: Clock },
+          { label: "Total Paid", value: formatRWFCompact(totalPaid), sub: `${(invoices as any[]).filter((i: any) => i.status === "paid").length} invoices`, color: "text-status-success-text", bg: "bg-[color:var(--status-success-bg)]/10", icon: CheckCircle },
+          { label: "Budget Utilisation", value: `${budgetSummary?.totalAllocated ? (((budgetSummary.totalSpent || 0) / budgetSummary.totalAllocated) * 100).toFixed(0) : 0}%`, sub: `${formatRWFCompact(budgetSummary?.totalSpent || 0)} of ${formatRWFCompact(budgetSummary?.totalAllocated || 0)}`, color: "text-primary", bg: "bg-primary/10", icon: TrendingUp },
+        ].map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <Card key={index} className={`p-4 ${item.bg}`}>
+              <div className="mb-1 flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                <Icon className={`w-4 h-4 ${item.color} opacity-70`} />
+              </div>
+              <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
+              <p className="text-xs text-muted-foreground">{item.sub}</p>
+            </Card>
+          );
+        })}
       </div>
 
       {tab === "invoices" && (
@@ -141,7 +156,7 @@ export default function AccountantDashboard() {
             <Card className="p-12 text-center text-muted-foreground"><FileText className="mx-auto mb-2 w-10 h-10 opacity-40" />No invoices match this filter</Card>
           ) : (
             (filtered as any[]).map((inv: any) => {
-              const cfg = STATUS_CONFIG[inv.status] ?? { label: inv.status, color: "text-gray-600", bg: "bg-gray-50 border-gray-200" };
+              const statusColor = getInvoiceStatusColor(inv.status);
               const remaining = Number(inv.totalAmount) - Number(inv.paidAmount || 0);
               const pct = Number(inv.totalAmount) > 0 ? Math.min(100, (Number(inv.paidAmount || 0) / Number(inv.totalAmount)) * 100) : 0;
               return (
@@ -150,12 +165,12 @@ export default function AccountantDashboard() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2 flex-wrap">
                         <p className="font-semibold">{inv.invoiceNumber}</p>
-                        <Badge className={`text-xs ${cfg.color} ${cfg.bg}`}>{cfg.label}</Badge>
+                        <Badge className={`text-xs ${statusColor.color} ${statusColor.bg}`}>{STATUS_CONFIG[inv.status]?.label ?? inv.status}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Total: <strong className="text-foreground">{formatRWF(inv.totalAmount)}</strong>
-                        {" · "}Paid: <strong className={inv.paidAmount > 0 ? "text-green-600" : "text-foreground"}>{formatRWF(inv.paidAmount || 0)}</strong>
-                        {remaining > 0 && <> · <span className="font-medium text-red-600">Remaining: {formatRWF(remaining)}</span></>}
+                        {" · "}Paid: <strong className={inv.paidAmount > 0 ? "text-status-success-text" : "text-foreground"}>{formatRWF(inv.paidAmount || 0)}</strong>
+                        {remaining > 0 && <> · <span className="font-medium text-destructive">Remaining: {formatRWF(remaining)}</span></>}
                       </p>
                       {inv.dueDate && <p className="mt-0.5 text-xs text-muted-foreground">Due: {new Date(inv.dueDate).toLocaleDateString("en-RW", { dateStyle: "medium" })}</p>}
                       {Number(inv.totalAmount) > 0 && (
@@ -190,9 +205,9 @@ export default function AccountantDashboard() {
               <Button size="sm" onClick={() => setShowCreateBudget(true)} className="gap-1"><Plus className="w-3.5 h-3.5" />Add Allocation</Button>
             </div>
             <div className="mb-4 grid grid-cols-3 gap-4 text-center">
-              <div><p className="text-xs text-muted-foreground">Allocated</p><p className="text-2xl font-bold text-blue-600">{formatRWFCompact(budgetSummary?.totalAllocated)}</p></div>
-              <div><p className="text-xs text-muted-foreground">Spent</p><p className="text-2xl font-bold text-red-600">{formatRWFCompact(budgetSummary?.totalSpent)}</p></div>
-              <div><p className="text-xs text-muted-foreground">Remaining</p><p className="text-2xl font-bold text-green-600">{formatRWFCompact((budgetSummary?.totalAllocated || 0) - (budgetSummary?.totalSpent || 0))}</p></div>
+              <div><p className="text-xs text-muted-foreground">Allocated</p><p className="text-2xl font-bold text-primary">{formatRWFCompact(budgetSummary?.totalAllocated)}</p></div>
+              <div><p className="text-xs text-muted-foreground">Spent</p><p className="text-2xl font-bold text-destructive">{formatRWFCompact(budgetSummary?.totalSpent)}</p></div>
+              <div><p className="text-xs text-muted-foreground">Remaining</p><p className="text-2xl font-bold text-status-success-text">{formatRWFCompact((budgetSummary?.totalAllocated || 0) - (budgetSummary?.totalSpent || 0))}</p></div>
             </div>
           </Card>
 
@@ -229,17 +244,20 @@ export default function AccountantDashboard() {
           {(invoices as any[]).filter((i: any) => Number(i.paidAmount) > 0).length === 0 ? (
             <Card className="p-12 text-center text-muted-foreground"><CreditCard className="mx-auto mb-2 w-10 h-10 opacity-40" />No payments recorded yet</Card>
           ) : (
-            (invoices as any[]).filter((i: any) => Number(i.paidAmount) > 0).map((inv: any) => (
-              <Card key={inv.id} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{inv.invoiceNumber}</p>
-                    <p className="text-xs text-muted-foreground">{formatRWF(inv.paidAmount)} paid of {formatRWF(inv.totalAmount)}</p>
+            (invoices as any[]).filter((i: any) => Number(i.paidAmount) > 0).map((inv: any) => {
+              const statusColor = getInvoiceStatusColor(inv.status);
+              return (
+                <Card key={inv.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{inv.invoiceNumber}</p>
+                      <p className="text-xs text-muted-foreground">{formatRWF(inv.paidAmount)} paid of {formatRWF(inv.totalAmount)}</p>
+                    </div>
+                    <Badge className={`text-xs ${statusColor.color} ${statusColor.bg}`}>{STATUS_CONFIG[inv.status]?.label ?? inv.status}</Badge>
                   </div>
-                  <Badge className={`text-xs ${STATUS_CONFIG[inv.status]?.color ?? ""} ${STATUS_CONFIG[inv.status]?.bg ?? ""}`}>{STATUS_CONFIG[inv.status]?.label ?? inv.status}</Badge>
-                </div>
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
           <p className="pb-4 pt-2 text-center text-xs font-semibold text-muted-foreground">Total Paid: {formatRWF(totalPaid)}</p>
         </div>
@@ -287,7 +305,7 @@ export default function AccountantDashboard() {
         <DialogContent>
           <DialogHeader><DialogTitle>Record Payment - {selectedInv?.invoiceNumber}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-1">
-            <div><label className="text-sm font-medium">Amount (RWF) *</label><Input type="number" step="0.01" className="mt-1" value={payForm.amount} onChange={e => setPayForm(prev => ({ ...prev, amount: e.target.value }))} /></div>
+            <div><label className="text-sm font-medium">Amount (RWF) *</label><Input type="number" step="1" min="0" className="mt-1" value={payForm.amount} onChange={e => setPayForm(prev => ({ ...prev, amount: e.target.value.replace(/[^0-9]/g, '') }))} /></div>
             <div><label className="text-sm font-medium">Payment Method *</label>
               <Select value={payForm.method} onValueChange={value => setPayForm(prev => ({ ...prev, method: value }))}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -328,7 +346,7 @@ export default function AccountantDashboard() {
           <DialogHeader><DialogTitle>Create Budget Allocation</DialogTitle></DialogHeader>
           <div className="space-y-3 py-1">
             <div><label className="text-sm font-medium">Department *</label><Input className="mt-1" value={budgetForm.department} onChange={e => setBudgetForm(prev => ({ ...prev, department: e.target.value }))} /></div>
-            <div><label className="text-sm font-medium">Allocated Amount (RWF) *</label><Input type="number" className="mt-1" value={budgetForm.allocatedAmount} onChange={e => setBudgetForm(prev => ({ ...prev, allocatedAmount: e.target.value }))} /></div>
+            <div><label className="text-sm font-medium">Allocated Amount (RWF) *</label><Input type="number" step="1" min="0" className="mt-1" value={budgetForm.allocatedAmount} onChange={e => setBudgetForm(prev => ({ ...prev, allocatedAmount: e.target.value.replace(/[^0-9]/g, '') }))} /></div>
             <div><label className="text-sm font-medium">Fiscal Year *</label><Input type="number" className="mt-1" value={budgetForm.fiscalYear} onChange={e => setBudgetForm(prev => ({ ...prev, fiscalYear: e.target.value }))} /></div>
             <div><label className="text-sm font-medium">Notes</label><Input className="mt-1" value={budgetForm.notes} onChange={e => setBudgetForm(prev => ({ ...prev, notes: e.target.value }))} /></div>
           </div>

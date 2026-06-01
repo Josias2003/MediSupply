@@ -312,7 +312,7 @@ export default function SupplierDashboard() {
             </div>
             <div>
               <label className="text-sm font-medium">Invoice Amount (RWF) *</label>
-              <Input type="number" step="0.01" className="mt-1" value={invAmount} onChange={e => setInvAmount(e.target.value)} />
+              <Input type="number" step="1" min="0" className="mt-1" value={invAmount} onChange={e => setInvAmount(e.target.value.replace(/[^0-9]/g, ''))} />
             </div>
             <div>
               <label className="text-sm font-medium">Payment Due Date</label>

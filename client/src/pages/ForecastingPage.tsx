@@ -10,9 +10,9 @@ import { toast } from "sonner";
 import { formatRWF, formatRWFCompact } from "@/lib/utils";
 
 const URGENCY_CONFIG: Record<string, { color: string; label: string; dot: string }> = {
-  critical: { color: "bg-red-50 border-red-200",    label: "Critical Priority",  dot: "bg-red-500" },
-  high:     { color: "bg-orange-50 border-orange-200", label: "High Priority",   dot: "bg-orange-500" },
-  medium:   { color: "bg-amber-50 border-amber-200",  label: "Medium Priority",  dot: "bg-amber-400" },
+  critical: { color: "bg-destructive/10 border-destructive/20",    label: "Critical Priority",  dot: "bg-destructive" },
+  high:     { color: "bg-status-warning-bg/20 border-[color:var(--status-warning-bg)]/30", label: "High Priority",   dot: "bg-status-warning-text" },
+  medium:   { color: "bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800",  label: "Medium Priority",  dot: "bg-amber-400" },
 };
 
 const METHOD_INFO: Record<string, { name: string; desc: string }> = {
@@ -71,11 +71,11 @@ export default function ForecastingPage() {
         <div className="space-y-4">
           {/* Summary banner */}
           {(recs?.recommendations?.length ?? 0) > 0 && (
-            <Card className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+            <Card className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <p className="font-semibold text-purple-900">{recs!.recommendations!.length} items need procurement action</p>
-                  <p className="text-sm text-purple-700 mt-0.5">
+                  <p className="font-semibold text-primary">{recs!.recommendations!.length} items need procurement action</p>
+                  <p className="text-sm text-primary/80 mt-0.5">
                     {recs!.recommendations!.filter((r: any) => r.urgency === "critical").length} critical ·{" "}
                     {recs!.recommendations!.filter((r: any) => r.urgency === "high").length} high ·{" "}
                     {recs!.recommendations!.filter((r: any) => r.urgency === "medium").length} medium
@@ -83,19 +83,19 @@ export default function ForecastingPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Estimated procurement cost</p>
-                  <p className="text-xl font-bold text-purple-800">{formatRWFCompact(totalEstimatedCost)}</p>
+                  <p className="text-xl font-bold text-primary">{formatRWFCompact(totalEstimatedCost)}</p>
                 </div>
               </div>
             </Card>
           )}
 
           {recsLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-purple-500" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>
           ) : (recs?.recommendations?.length ?? 0) === 0 ? (
-            <Card className="p-14 text-center text-muted-foreground border-green-200 bg-green-50">
-              <Activity className="w-10 h-10 mx-auto mb-3 text-green-500 opacity-60" />
-              <p className="font-semibold text-green-800">All stock levels are healthy</p>
-              <p className="text-sm text-green-700 mt-1">No procurement action required at this time</p>
+            <Card className="p-14 text-center text-muted-foreground border-status-success-bg/30 bg-status-success-bg/10">
+              <Activity className="w-10 h-10 mx-auto mb-3 text-status-success-text opacity-70" />
+              <p className="font-semibold text-status-success-text">All stock levels are healthy</p>
+              <p className="text-sm text-status-success-text/80 mt-1">No procurement action required at this time</p>
             </Card>
           ) : recs!.recommendations!.map((r: any) => (
             <Card key={r.supplyId} className={`p-4 border ${URGENCY_CONFIG[r.urgency]?.color ?? ""}`}>
@@ -105,15 +105,15 @@ export default function ForecastingPage() {
                     <span className={`w-2 h-2 rounded-full shrink-0 ${URGENCY_CONFIG[r.urgency]?.dot ?? "bg-gray-400"}`} />
                     <p className="font-semibold">{r.supplyName}</p>
                     <Badge variant="outline" className="text-xs">{r.category}</Badge>
-                    <Badge className={`text-xs ${r.urgency === "critical" ? "bg-red-100 text-red-800" : r.urgency === "high" ? "bg-orange-100 text-orange-800" : "bg-amber-100 text-amber-800"}`}>
+                    <Badge className={`text-xs ${r.urgency === "critical" ? "bg-destructive/20 text-destructive" : r.urgency === "high" ? "bg-status-warning-bg/20 text-status-warning-text" : "bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200"}`}>
                       {URGENCY_CONFIG[r.urgency]?.label ?? r.urgency}
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground mb-2">
-                    <span>Stock: <strong className="text-red-600">{r.currentStock} {r.unit}</strong></span>
+                    <span>Stock: <strong className="text-destructive">{r.currentStock} {r.unit}</strong></span>
                     <span>Reorder point: <strong className="text-foreground">{r.reorderPoint}</strong></span>
                     <span>30-day forecast: <strong className="text-foreground">{r.predictedDemand30d.toLocaleString()} {r.unit}</strong></span>
-                    <span>Days cover: <strong className={r.stockCoverDays < 7 ? "text-red-600" : "text-foreground"}>{r.stockCoverDays < 999 ? `${r.stockCoverDays}d` : "∞"}</strong></span>
+                    <span>Days cover: <strong className={r.stockCoverDays < 7 ? "text-destructive" : "text-foreground"}>{r.stockCoverDays < 999 ? `${r.stockCoverDays}d` : "∞"}</strong></span>
                   </div>
                   {/* Stock coverage bar */}
                   <div className="w-full max-w-xs">

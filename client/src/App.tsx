@@ -79,9 +79,9 @@ function Router() {
     return (
       <Switch>
         <Route path="/reset-password" component={ResetPasswordPage} />
-        <Route path="/" component={LoginPage} />
         <Route path="/login" component={LoginPage} />
-        <Route component={LoginPage} />
+        <Route path="/" component={Home} />
+        <Route component={Home} />
       </Switch>
     );
   }
@@ -92,7 +92,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="light" switchable>
         <TooltipProvider>
           <Toaster />
           <Router />

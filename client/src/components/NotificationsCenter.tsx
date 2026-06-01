@@ -33,20 +33,20 @@ export default function NotificationsCenter({ onPreferencesClick }: Notification
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "low_stock":
-        return <AlertCircle className="w-5 h-5 text-orange-500" />;
+        return <AlertCircle className="w-5 h-5 text-status-warning-text" />;
       case "expiry_warning":
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
+        return <AlertCircle className="w-5 h-5 text-destructive" />;
       case "approval_pending":
-        return <Clock className="w-5 h-5 text-blue-500" />;
+        return <Clock className="w-5 h-5 text-primary" />;
       case "order_update":
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-status-success-text" />;
       case "delivery_delay":
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+        return <AlertCircle className="w-5 h-5 text-status-warning-text" />;
       case "budget_alert":
       case "payment_due":
-        return <AlertCircle className="w-5 h-5 text-purple-500" />;
+        return <AlertCircle className="w-5 h-5 text-secondary" />;
       default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />;
+        return <AlertCircle className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
@@ -112,14 +112,14 @@ export default function NotificationsCenter({ onPreferencesClick }: Notification
       </div>
 
       {selectedNotifications.length > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
-          <span className="text-sm font-medium text-blue-900">{selectedNotifications.length} selected</span>
+        <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 p-3">
+          <span className="text-sm font-medium text-primary">{selectedNotifications.length} selected</span>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleMarkSelectedAsRead}
             disabled={selectedUnreadIds.length === 0 || markAsReadMutation.isPending}
-            className="text-blue-700 hover:text-blue-800"
+            className="text-primary hover:text-primary/80"
           >
             Mark as Read
           </Button>
@@ -129,15 +129,15 @@ export default function NotificationsCenter({ onPreferencesClick }: Notification
       <div className="max-h-96 space-y-2 overflow-y-auto">
         {filteredNotifications.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-gray-500">No notifications</p>
+            <p className="text-muted-foreground">No notifications</p>
           </Card>
         ) : (
           filteredNotifications.map((notification: any) => (
             <Card
               key={notification.id}
               className={`cursor-pointer p-4 transition-colors ${
-                notification.isRead ? "bg-gray-50" : "bg-blue-50 border-blue-200"
-              } hover:bg-gray-100`}
+                notification.isRead ? "bg-card" : "bg-primary/5 border-primary/20"
+              } hover:bg-muted`}
             >
               <div className="flex gap-3">
                 <Checkbox
@@ -153,9 +153,9 @@ export default function NotificationsCenter({ onPreferencesClick }: Notification
                       {getNotificationBadge(notification.type).label}
                     </Badge>
                   </div>
-                  <p className="mb-2 text-sm text-gray-600">{notification.message}</p>
+                  <p className="mb-2 text-sm text-foreground/70">{notification.message}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(notification.createdAt).toLocaleString()}
                     </span>
                     {!notification.isRead && (
