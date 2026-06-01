@@ -20,7 +20,7 @@ export default function ReportingPage() {
   const [selectedMedicineId, setSelectedMedicineId] = useState<number | null>(null);
 
   const { data, isLoading } = trpc.export.allowedReports.useQuery();
-  const { data: medicines = [] } = trpc.supplies.list.useQuery(undefined, {
+  const { data: medicines = [] } = trpc.inventory.list.useQuery(undefined, {
     enabled: user?.role === "pharmacist",
   });
 

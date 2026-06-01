@@ -1260,6 +1260,74 @@ export const appRouter = router({
       await logReportExport(db, ctx.user.id, "logs");
       return { data, timestamp: new Date() };
     }),
+    medicineDetailReport: protectedProcedure
+      .input(z.number())
+      .query(async ({ input: medicineId, ctx }) => {
+        assertCanExportReport(ctx.user.role, "inventory");
+        const db = await getDb();
+        if (!db) return { medicine: null, usage: [], summary: {} };
+
+        // Get medicine details
+        const [medicine] = await db.select().from(medicalSupplies)
+          .leftJoin(suppliers, eq(medicalSupplies.supplierId, suppliers.id))
+          .where(eq(medicalSupplies.id, medicineId));
+
+        if (!medicine) {
+          return { medicine: null, usage: [], summary: {} };
+        }
+
+        // Get usage history (last 100 transactions)
+        const usage = await db.select({
+          transactionType: inventoryTransactions.transactionType,
+          quantity: inventoryTransactions.quantity,
+          notes: inventoryTransactions.notes,
+          userName: users.name,
+          createdAt: inventoryTransactions.createdAt,
+        }).from(inventoryTransactions)
+          .leftJoin(users, eq(inventoryTransactions.userId, users.id))
+          .where(eq(inventoryTransactions.supplyId, medicineId))
+          .orderBy(desc(inventoryTransactions.createdAt))
+          .limit(100);
+
+        // Calculate usage summary
+        const totalUsage = usage.filter(u => u.transactionType === "usage").reduce((sum, u) => sum + u.quantity, 0);
+        const totalPurchased = usage.filter(u => u.transactionType === "purchase").reduce((sum, u) => sum + u.quantity, 0);
+        const avgMonthlyUsage = totalUsage > 0 ? Math.round(totalUsage / 3) : 0; // Rough estimate
+        const estimatedDaysToRunOut = medicine.medical_supplies.currentStock > 0 && avgMonthlyUsage > 0
+          ? Math.round((medicine.medical_supplies.currentStock / avgMonthlyUsage) * 30)
+          : -1;
+
+        const summary = {
+          totalUsage,
+          totalPurchased,
+          avgMonthlyUsage,
+          estimatedDaysToRunOut,
+          stockStatus: medicine.medical_supplies.currentStock <= medicine.medical_supplies.reorderPoint ? "Low Stock" : "In Stock",
+        };
+
+        await logReportExport(db, ctx.user.id, "inventory");
+        return {
+          medicine: {
+            id: medicine.medical_supplies.id,
+            code: medicine.medical_supplies.code,
+            name: medicine.medical_supplies.name,
+            category: medicine.medical_supplies.category,
+            unit: medicine.medical_supplies.unit,
+            currentStock: medicine.medical_supplies.currentStock,
+            reorderPoint: medicine.medical_supplies.reorderPoint,
+            reorderQuantity: medicine.medical_supplies.reorderQuantity,
+            unitCost: medicine.medical_supplies.unitCost,
+            supplierName: medicine.suppliers?.name || "N/A",
+            expiryDate: medicine.medical_supplies.expiryDate,
+            storageLocation: medicine.medical_supplies.storageLocation,
+            batchNumber: medicine.medical_supplies.batchNumber,
+            description: medicine.medical_supplies.description,
+          },
+          usage,
+          summary,
+          timestamp: new Date(),
+        };
+      }),
   }),
 
   // ══════════════════════════════════════════════════════════
