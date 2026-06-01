@@ -428,20 +428,22 @@ export default function ExportReports({ reportType, period = "monthly", dateFrom
   const usersQ      = trpc.export.usersToJSON.useQuery(undefined, { enabled: false });
   const logsQ       = trpc.export.logsToJSON.useQuery(undefined, { enabled: false });
   const medicinesQ  = trpc.inventory.list.useQuery(undefined, { enabled: !!medicineId });
+  const medicineDetailQ = trpc.export.medicineDetailReport.useQuery(medicineId ?? 0, { enabled: false });
 
   const handleExport = async () => {
     setIsExporting(true);
     try {
       // If exporting a single medicine with inventory report, get detailed report
       if (medicineId && reportType === "inventory") {
-        const medicineDetailQ = await trpc.export.medicineDetailReport.query(medicineId);
+        const result = await medicineDetailQ.refetch();
+        const medicineDetailData = result.data;
 
-        if (!medicineDetailQ.medicine) {
+        if (!medicineDetailData?.medicine) {
           toast.error("Medicine not found");
           return;
         }
 
-        const { medicine, usage, summary } = medicineDetailQ;
+        const { medicine, usage, summary } = medicineDetailData;
         const dateStr = new Date().toISOString().split("T")[0];
         const filename = `medicine-report-${medicine.code}-${dateStr}`;
 
